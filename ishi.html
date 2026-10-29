@@ -1,0 +1,725 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Happy Birthday, Ishi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#ffe9f0;
+    --bg-2:#ffd9e5;
+    --pink:#fbd3de;
+    --pink-2:#f7bccb;
+    --rose:#f59ab3;
+    --deep:#e0708f;
+    --plum:#6b2f4a;
+    --plum-2:#9a5070;
+    --cream:#fff7fa;
+    --gold:#ffd86b;
+    --p:7px;               /* size of one "pixel" in the envelope sprites */
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Press Start 2P',monospace;
+    color:var(--plum);
+    background:var(--bg);
+    background-image:
+      linear-gradient(var(--bg-2) 2px, transparent 2px),
+      linear-gradient(90deg, var(--bg-2) 2px, transparent 2px);
+    background-size:32px 32px;
+    overflow-x:hidden;
+    min-height:100vh;
+    image-rendering:pixelated;
+  }
+  svg{display:block;width:100%;height:auto}
+
+  /* CRT scanlines + vignette over everything */
+  .crt{
+    position:fixed;inset:0;pointer-events:none;z-index:100;
+    background:
+      repeating-linear-gradient(to bottom, rgba(107,47,74,.06) 0 2px, transparent 2px 4px),
+      radial-gradient(ellipse at center, transparent 60%, rgba(107,47,74,.14) 100%);
+    animation:flicker 4s steps(2) infinite;
+  }
+  @keyframes flicker{0%,96%,100%{opacity:1}97%{opacity:.85}}
+
+  /* ---------- HUD ---------- */
+  .hud{
+    position:fixed;left:0;right:0;z-index:50;display:flex;justify-content:space-between;align-items:center;
+    padding:12px 16px;font-size:10px;line-height:1.6;color:var(--plum);
+  }
+  .hud.top{top:0}
+  .hud.bottom{bottom:0;font-size:9px}
+  .hud .label{color:var(--deep)}
+  .hud button{
+    font:inherit;color:var(--plum);background:var(--cream);cursor:pointer;
+    border:3px solid var(--plum);padding:5px 8px;box-shadow:3px 3px 0 var(--plum-2);
+  }
+  .hud button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--plum-2)}
+  .blink{animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  @media (max-width:480px){ .hud{font-size:8px;padding:10px 12px} .hide-sm{display:none} }
+
+  /* ---------- background sprites + floor ---------- */
+  .bg{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+  .float{position:absolute;bottom:-60px;opacity:.45;animation:rise linear infinite}
+  @keyframes rise{to{transform:translateY(-120vh)}}
+  .floor{
+    position:fixed;left:-50%;right:-50%;bottom:0;height:34vh;z-index:0;pointer-events:none;
+    perspective:300px;overflow:hidden;
+  }
+  .floor::before{
+    content:"";position:absolute;inset:-100% 0 0 0;
+    background:
+      linear-gradient(var(--rose) 3px, transparent 3px),
+      linear-gradient(90deg, var(--rose) 3px, transparent 3px);
+    background-size:60px 60px;
+    transform:rotateX(62deg);transform-origin:bottom;
+    animation:scroll 1.2s linear infinite;opacity:.55;
+  }
+  .floor::after{content:"";position:absolute;inset:0;background:linear-gradient(var(--bg) 0%, transparent 45%)}
+  @keyframes scroll{to{background-position:0 60px, 0 0}}
+
+  /* ---------- main stage ---------- */
+  .stage{
+    position:relative;z-index:1;min-height:100vh;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:56px 16px 56px;text-align:center;
+  }
+  .appear{animation:appear .01s linear both}
+  @keyframes appear{from{opacity:0}to{opacity:1}}
+
+  .main-heart{width:calc(18 * 5px);margin-bottom:12px;animation:appear .01s linear .2s both, beat 1s steps(1) infinite}
+  @keyframes beat{0%,100%{transform:scale(1)}15%{transform:scale(1.15)}30%{transform:scale(1)}45%{transform:scale(1.1)}}
+
+  .title{line-height:1.25}
+  .title div{animation:appear .01s linear both}
+  .t1{font-size:clamp(1.1rem,5.5vw,2.1rem);color:var(--deep);text-shadow:4px 4px 0 var(--plum);animation-delay:.5s!important}
+  .t2{font-size:clamp(1.4rem,7.2vw,3rem);color:var(--rose);text-shadow:4px 4px 0 var(--plum), 8px 8px 0 var(--pink-2);margin-top:6px;animation-delay:.9s!important}
+  .t3{
+    font-size:clamp(1.9rem,10vw,3.8rem);color:var(--cream);margin-top:12px;
+    text-shadow:4px 0 0 var(--deep),-4px 0 0 var(--deep),0 4px 0 var(--deep),0 -4px 0 var(--deep),8px 8px 0 var(--plum);
+    animation:appear .01s linear 1.3s both, bob 1.2s steps(2) 1.3s infinite!important;
+  }
+  @keyframes bob{50%{transform:translateY(-6px)}}
+
+  /* heart monitor */
+  .monitor{
+    width:min(480px,92vw);margin:22px 0 4px;padding:10px 12px 8px;background:var(--cream);
+    border:4px solid var(--plum);box-shadow:6px 6px 0 var(--plum-2);
+    animation:appear .01s linear 1.7s both;
+  }
+  .monitor-top{display:flex;justify-content:space-between;font-size:9px;margin-bottom:6px}
+  .monitor-top .bpm{color:var(--deep)}
+  .ecg{height:46px}
+  .ecg path{fill:none;stroke-linejoin:miter;stroke-linecap:square}
+  .ecg .ghost{stroke:var(--pink);stroke-width:3}
+  .ecg .live{stroke:var(--deep);stroke-width:4;stroke-dasharray:.2 1;animation:sweep 2s steps(40) infinite}
+  @keyframes sweep{from{stroke-dashoffset:1.2}to{stroke-dashoffset:0}}
+
+  /* balloons */
+  .balloon{position:absolute;width:calc(11 * 7px);z-index:0;animation:float 2s steps(2) infinite}
+  .b1{left:4%;top:13%}
+  .b2{left:12%;top:40%;width:calc(11 * 5px);animation-delay:-.7s}
+  .b3{right:4%;top:11%;animation-delay:-1.1s}
+  .b4{right:12%;top:42%;width:calc(11 * 5px);animation-delay:-.4s}
+  @keyframes float{50%{transform:translateY(-10px)}}
+  @media (max-width:700px){
+    .balloon{width:calc(11 * 4px)}
+    .b2,.b4{display:none}
+    .b1{left:3%;top:9%}.b3{right:3%;top:9%}
+  }
+
+  /* ---------- envelope (pixel sprites) ---------- */
+  .env-wrap{margin-top:28px;display:flex;flex-direction:column;align-items:center;gap:18px;animation:appear .01s linear 2.3s both}
+  .envelope{
+    position:relative;width:calc(26 * var(--p));height:calc(17 * var(--p));
+    border:none;background:none;cursor:pointer;-webkit-tap-highlight-color:transparent;
+    animation:hop 1.4s steps(1) 2.6s infinite;
+  }
+  .envelope.open{animation:none}
+  .envelope:focus-visible{outline:4px dashed var(--deep);outline-offset:10px}
+  @keyframes hop{0%,100%{transform:translateY(0)}20%{transform:translateY(-8px)}40%{transform:translateY(0)}55%{transform:translateY(-4px)}70%{transform:translateY(0)}}
+  .envelope > div{position:absolute}
+  .env-back,.env-front{inset:0}
+  .env-back{z-index:0;filter:drop-shadow(6px 6px 0 rgba(107,47,74,.35))}
+  .env-paper{z-index:1;left:calc(2 * var(--p));top:calc(1 * var(--p));width:calc(22 * var(--p));transition:transform .9s steps(6) .3s}
+  .env-front{z-index:2}
+  .env-flap{z-index:3;left:0;top:0;width:100%;transform-origin:top;transition:transform .45s steps(3), z-index 0s .25s}
+  .seal{z-index:4;width:calc(9 * var(--p) * .8);left:50%;top:calc(5.6 * var(--p));transform:translateX(-50%);transition:opacity .2s steps(1)}
+  .envelope.open .env-flap{transform:scaleY(-1);z-index:0}
+  .envelope.open .seal{opacity:0}
+  .envelope.open .env-paper{transform:translateY(calc(-8 * var(--p)))}
+  .press{font-size:12px;color:var(--deep);text-shadow:2px 2px 0 var(--cream)}
+  .press small{display:block;margin-top:8px;font-size:8px;color:var(--plum-2)}
+
+  /* ---------- pixel window (used by modal + letter) ---------- */
+  .window{
+    background:var(--cream);border:4px solid var(--plum);
+    box-shadow:0 0 0 4px var(--cream), 0 0 0 8px var(--deep), 12px 12px 0 8px rgba(107,47,74,.25);
+  }
+  .window-bar{
+    background:var(--deep);color:var(--cream);font-size:10px;padding:10px 12px;
+    display:flex;justify-content:space-between;border-bottom:4px solid var(--plum);
+  }
+
+  /* ---------- password modal ---------- */
+  .modal{
+    position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:24px 20px;
+    background:rgba(255,217,229,.82);visibility:hidden;
+  }
+  .modal.show{visibility:visible}
+  .lock-card{width:min(440px,100%);text-align:center}
+  .lock-body{padding:22px 16px 22px}
+  .lock-icon{width:calc(9 * 5px);margin:0 auto 14px}
+  .lock-body h2{font-size:15px;color:var(--deep);text-shadow:2px 2px 0 var(--pink-2);line-height:1.5}
+  .lead{font-size:8px;color:var(--plum-2);margin-top:8px;line-height:1.6}
+  .hint-box{margin:18px 0;padding:12px 10px;background:var(--bg);border:3px dashed var(--rose)}
+  .hint-label{font-size:8px;color:var(--deep)}
+  .hint{font-family:'VT323',monospace;font-size:26px;margin-top:6px;color:var(--plum)}
+
+  .pw-field{position:relative;display:inline-block;padding:4px 2px}
+  .slots{display:flex;gap:5px;justify-content:center}
+  .slot{
+    width:24px;height:34px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;
+    font-size:15px;text-transform:uppercase;color:var(--plum);
+    border-bottom:4px solid var(--plum-2);
+  }
+  .slot.active{border-color:var(--deep);animation:blinkline .8s steps(1) infinite}
+  @keyframes blinkline{50%{border-color:transparent}}
+  .slots.wrong .slot{color:#d0405f;border-color:#d0405f}
+  .slots.right .slot{color:var(--deep);border-color:var(--deep);animation:none}
+  #pw{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:none;font-size:16px;cursor:text}
+  @media (max-width:380px){.slot{width:20px;font-size:12px}.slots{gap:4px}}
+  .count{margin-top:12px;font-size:8px;color:var(--plum-2)}
+  .msg{min-height:26px;margin-top:12px;font-size:10px;line-height:1.5;color:#d0405f}
+  .msg.good{color:var(--deep)}
+  .attempts{font-size:8px;color:var(--plum-2);margin-top:4px}
+  .btn{
+    margin-top:16px;font:inherit;font-size:11px;cursor:pointer;color:var(--cream);background:var(--deep);
+    border:4px solid var(--plum);padding:12px 18px;box-shadow:5px 5px 0 var(--plum);
+  }
+  .btn:active{transform:translate(4px,4px);box-shadow:1px 1px 0 var(--plum)}
+  .shake{animation:shake .4s steps(6)}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-10px)}40%{transform:translateX(10px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+
+  /* stage clear flash */
+  .clear{
+    position:fixed;inset:0;z-index:70;display:grid;place-items:center;pointer-events:none;visibility:hidden;
+    font-size:clamp(1.4rem,7vw,3rem);color:var(--gold);
+    text-shadow:4px 0 0 var(--plum),-4px 0 0 var(--plum),0 4px 0 var(--plum),0 -4px 0 var(--plum),8px 8px 0 var(--deep);
+  }
+  .clear.show{visibility:visible;animation:blink .25s steps(1) 5}
+
+  /* ---------- letter ---------- */
+  .letter-view{
+    position:fixed;inset:0;z-index:40;overflow-y:auto;padding:70px 20px 80px;
+    background:var(--bg);
+    background-image:
+      linear-gradient(var(--bg-2) 2px, transparent 2px),
+      linear-gradient(90deg, var(--bg-2) 2px, transparent 2px);
+    background-size:32px 32px;
+    visibility:hidden;
+  }
+  .letter-view.show{visibility:visible}
+  .dialog{width:min(660px,100%);margin:0 auto}
+  .dialog-body{padding:26px clamp(16px,5vw,40px) 30px;cursor:pointer}
+  .top-heart{width:calc(18 * 4px);margin:0 auto 18px;animation:beat 1s steps(1) infinite}
+  #letterText h3{font-size:clamp(13px,3.6vw,18px);color:var(--deep);text-shadow:2px 2px 0 var(--pink-2);margin-bottom:20px;line-height:1.5}
+  #letterText p{font-family:'VT323',monospace;font-size:clamp(22px,5vw,26px);line-height:1.3;margin-bottom:20px;color:var(--plum);white-space:pre-line}
+  #letterText p.sign{font-family:'Press Start 2P',monospace;font-size:12px;line-height:1.9;color:var(--deep);margin-top:28px;margin-bottom:0}
+  #letterText .typing::after{content:"█";color:var(--deep);animation:blink .6s steps(1) infinite;margin-left:2px}
+  .skip{text-align:right;font-size:8px;color:var(--plum-2);margin-top:12px}
+  .letter-actions{text-align:center;margin-top:30px}
+
+  /* confetti */
+  .bit{position:fixed;top:-20px;z-index:45;pointer-events:none;animation:fall linear forwards}
+  @keyframes fall{to{transform:translateY(112vh)}}
+
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  }
+</style>
+</head>
+<body>
+
+<div class="bg" id="bg" aria-hidden="true"></div>
+<div class="floor" aria-hidden="true"></div>
+<div class="crt" aria-hidden="true"></div>
+
+<div class="hud top">
+  <div><span class="label">1UP</span> ISHI</div>
+  <div class="hide-sm"><span class="label">HI-SCORE</span> 001114</div>
+  <button id="soundBtn" aria-label="Toggle sound">♪ ON</button>
+</div>
+<div class="hud bottom">
+  <div>CREDIT 01</div>
+  <div class="blink">♥ LEVEL UP ♥</div>
+</div>
+
+<main class="stage">
+  <div class="balloon b1" data-color="#f7bccb" aria-hidden="true"></div>
+  <div class="balloon b2" data-color="#ffd86b" aria-hidden="true"></div>
+  <div class="balloon b3" data-color="#f59ab3" aria-hidden="true"></div>
+  <div class="balloon b4" data-color="#c9b6f2" aria-hidden="true"></div>
+
+  <div class="main-heart" id="mainHeart" aria-hidden="true"></div>
+
+  <h1 class="title">
+    <div class="t1">HAPPY</div>
+    <div class="t2">BIRTHDAY</div>
+    <div class="t3">ISHI</div>
+  </h1>
+
+  <div class="monitor" aria-hidden="true">
+    <div class="monitor-top"><span>VITALS</span><span class="bpm">♥ BPM 114</span></div>
+    <svg class="ecg" viewBox="0 0 600 100" preserveAspectRatio="none" shape-rendering="crispEdges">
+      <path class="ghost" id="ecgGhost"/>
+      <path class="live" id="ecgLive" pathLength="1"/>
+    </svg>
+  </div>
+
+  <div class="env-wrap">
+    <button class="envelope" id="envelope" aria-label="Open your letter">
+      <div class="env-back" id="envBack"></div>
+      <div class="env-paper" id="envPaper"></div>
+      <div class="env-front" id="envFront"></div>
+      <div class="env-flap" id="envFlap"></div>
+      <div class="seal" id="seal"></div>
+    </button>
+    <div class="press" id="press"><span class="blink">▶ PRESS START ◀</span><small>TAP THE LETTER</small></div>
+  </div>
+</main>
+
+<!-- password prompt -->
+<div class="modal" id="lockModal" role="dialog" aria-modal="true" aria-labelledby="lockTitle">
+  <div class="lock-card window" id="lockCard">
+    <div class="window-bar"><span>SECURE.EXE</span><span>♥ ♥ ♥</span></div>
+    <div class="lock-body">
+      <div class="lock-icon" id="lockIcon" aria-hidden="true"></div>
+      <h2 id="lockTitle">PASSWORD<br>REQUIRED</h2>
+      <p class="lead">ONLY PLAYER 1 MAY<br>READ THIS LETTER</p>
+
+      <div class="hint-box">
+        <div class="hint-label">★ HINT ★</div>
+        <div class="hint">"patience is a virtue"</div>
+      </div>
+
+      <div class="pw-field">
+        <div class="slots" id="slots"></div>
+        <input id="pw" type="text" maxlength="10" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" aria-label="Password, 10 letters">
+      </div>
+      <p class="count">10 LETTERS</p>
+      <p class="msg" id="msg" aria-live="polite"></p>
+      <p class="attempts" id="attempts">ATTEMPTS 00</p>
+      <button class="btn" id="unlockBtn">▶ ENTER</button>
+    </div>
+  </div>
+</div>
+
+<div class="clear" id="clear" aria-hidden="true">STAGE CLEAR!</div>
+
+<!-- the letter -->
+<section class="letter-view" id="letterView" aria-label="Birthday letter">
+  <article class="dialog window">
+    <div class="window-bar"><span>★ NEW MESSAGE ★</span><span>FOR: P1</span></div>
+    <div class="dialog-body" id="dialogBody">
+      <div class="top-heart" id="letterHeart" aria-hidden="true"></div>
+
+      <div id="letterText">
+        <!-- ✏️ ========== YOUR LETTER GOES HERE ========== ✏️
+             Each paragraph goes inside its own <p> ... </p>.
+             Use <br> for a line break inside a paragraph.
+             Change the sign-off at the bottom too. -->
+        <h3>DEAR ISHI,</h3>
+
+        <p>Write the first paragraph of your letter here.</p>
+
+        <p>Add as many paragraphs as you like. Each one just needs its own pair of p tags.</p>
+
+        <p>Happy birthday, my love.</p>
+
+        <p class="sign">FOREVER YOURS,<br>[YOUR NAME] ♥</p>
+        <!-- ✏️ ========== END OF LETTER ========== ✏️ -->
+      </div>
+      <div class="skip blink" id="skip">TAP TO SKIP ▼</div>
+    </div>
+  </article>
+  <div class="letter-actions"><button class="btn" id="backBtn">▶ PLAY AGAIN</button></div>
+</section>
+
+<script>
+  // ================= settings =================
+  const PASSWORD = "virtueless";
+
+  // ================= pixel sprite helpers =================
+  function sprite(rows, pal) {
+    const h = rows.length, w = Math.max(...rows.map(r => r.length));
+    let rects = '';
+    rows.forEach((r, y) => [...r].forEach((c, x) => {
+      if (pal[c]) rects += `<rect x="${x}" y="${y}" width="1" height="1" fill="${pal[c]}"/>`;
+    }));
+    return `<svg viewBox="0 0 ${w} ${h}" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">${rects}</svg>`;
+  }
+  function grid(w, h, fn) {
+    const rows = [];
+    for (let y = 0; y < h; y++) { let r = ''; for (let x = 0; x < w; x++) r += fn(x, y); rows.push(r); }
+    return rows;
+  }
+
+  // anatomical heart (18 x 20): pink aorta, lavender vena cava + pulmonary artery
+  const ANAT = [
+    "......a.a.a.......",
+    "......a.a.a.......",
+    "..vv.aaaaaaaa.....",
+    "..vv.aa....aaa....",
+    "..vv.aa.....aa.pp.",
+    "..vv.aa....pppppp.",
+    "..vvoaao..ppppp...",
+    ".oohhhhhoopphhoo..",
+    "ohhhhhhhhohhhhhho.",
+    "ohlhhhhhhhohhhhho.",
+    "ohlhhhhhhhhohhhhho",
+    "ohhhhhhhhhhohhhhho",
+    ".ohhhhhhhhhhohhhho",
+    ".ohhhhhhhhhhhohho.",
+    "..ohhhhhhhhhhhho..",
+    "...ohhhhhhhhhho...",
+    "....ohhhhhhhho....",
+    ".....ohhhhhho.....",
+    "......ohhhho......",
+    ".......oooo......."
+  ];
+  const ANAT_PAL = { v:'#b9b4ee', p:'#a9a2e6', a:'#ef86a3', o:'#b8577a', h:'#f7b3c4', l:'#fde0e8' };
+  const anatHeart = sprite(ANAT, ANAT_PAL);
+
+  // little classic pixel heart (9 x 8)
+  const HEART = [
+    ".oo...oo.",
+    "ohho.ohho",
+    "ohwhohhho",
+    "ohhhhhhho",
+    ".ohhhhho.",
+    "..ohhho..",
+    "...oho...",
+    "....o...."
+  ];
+  const pixelHeart = (fill) => sprite(HEART, { o:'#6b2f4a', h:fill, w:'#ffffff' });
+
+  // stethoscope balloon (11 x 27)
+  const BALLOON = [
+    "...bbbbb...",
+    "..bbbbbbb..",
+    ".bwwbbbbbb.",
+    ".bwbbbbbbb.",
+    "bbbbbbbbbbb",
+    "bbbbbbbbbbb",
+    "bbbbbbbbbbb",
+    ".bbbbbbbbb.",
+    ".bbbbbbbbb.",
+    "..bbbbbbb..",
+    "...bbbbb...",
+    ".....k.....",
+    "....kkk....",
+    ".....t.....",
+    "......t....",
+    "......t....",
+    ".....t.....",
+    "....t......",
+    "....t......",
+    ".....t.....",
+    "......t....",
+    ".....t.....",
+    "....sss....",
+    "...sgggs...",
+    "...sgwgs...",
+    "...sgggs...",
+    "....sss...."
+  ];
+  const balloon = (c) => sprite(BALLOON, { b:c, w:'#ffffff', k:'#b8577a', t:'#9a5070', s:'#6b2f4a', g:'#e9d3da' });
+
+  // lock (9 x 10)
+  const LOCK = [
+    "..ooooo..",
+    ".oo...oo.",
+    ".o.....o.",
+    ".o.....o.",
+    "ooooooooo",
+    "ohhhhhhho",
+    "ohhhkhhho",
+    "ohhhkhhho",
+    "ohhhhhhho",
+    "ooooooooo"
+  ];
+
+  // envelope pieces (26 wide)
+  const W = 26, H = 17, cx = (W - 1) / 2;
+  const envBack = grid(W, H, (x, y) => (x === 0 || y === 0 || x === W - 1 || y === H - 1) ? 'o' : 'b');
+  const envFront = grid(W, H, (x, y) => {
+    const line = 8 + (H - 1 - 8) * (Math.abs(x - cx) / cx);
+    if (x === 0 || x === W - 1 || y === H - 1) return y >= 8 || x === 0 || x === W - 1 ? 'o' : '.';
+    if (Math.abs(y - line) < .75) return 'o';
+    return y > line ? 'e' : '.';
+  });
+  const envFlap = grid(W, 10, (x, y) => {
+    const edge = 9.5 * (1 - Math.abs(x - cx) / cx);
+    if (y > edge + .5) return '.';
+    if (y === 0 || x === 0 || x === W - 1 || Math.abs(y - edge) <= .75) return 'o';
+    return 'f';
+  });
+  const envPaper = grid(22, 15, (x, y) => {
+    if (x === 0 || y === 0 || x === 21 || y === 14) return 'o';
+    if (y % 2 === 1 && y > 2 && y < 13 && x > 2 && x < 19) return 'l';
+    return 'w';
+  });
+  const ENV_PAL = { o:'#6b2f4a', b:'#e0708f', e:'#fbd3de', f:'#f7bccb', w:'#fff7fa', l:'#f7bccb' };
+
+  // ================= draw everything =================
+  const $ = (id) => document.getElementById(id);
+  $('mainHeart').innerHTML = anatHeart;
+  $('letterHeart').innerHTML = anatHeart;
+  $('lockIcon').innerHTML = sprite(LOCK, { o:'#6b2f4a', h:'#f59ab3', k:'#6b2f4a' });
+  $('envBack').innerHTML = sprite(envBack, ENV_PAL);
+  $('envFront').innerHTML = sprite(envFront, ENV_PAL);
+  $('envFlap').innerHTML = sprite(envFlap, ENV_PAL);
+  $('envPaper').innerHTML = sprite(envPaper, ENV_PAL);
+  $('seal').innerHTML = pixelHeart('#e0708f');
+  document.querySelectorAll('.balloon').forEach(b => b.innerHTML = balloon(b.dataset.color));
+
+  // floating background sprites
+  const bg = $('bg');
+  const heartColors = ['#f59ab3', '#f7bccb', '#e0708f', '#ffd86b'];
+  for (let i = 0; i < 16; i++) {
+    const f = document.createElement('div');
+    f.className = 'float';
+    const anatomical = i % 3 === 0;
+    f.innerHTML = anatomical ? anatHeart : pixelHeart(heartColors[i % heartColors.length]);
+    const size = anatomical ? 32 + Math.floor(Math.random() * 3) * 8 : 18 + Math.floor(Math.random() * 3) * 9;
+    f.style.width = size + 'px';
+    f.style.left = (Math.random() * 100) + '%';
+    const dur = 14 + Math.random() * 12;
+    f.style.animationDuration = dur + 's';
+    f.style.animationTimingFunction = `steps(${Math.round(dur * 4)})`;
+    f.style.animationDelay = (-Math.random() * 25) + 's';
+    bg.appendChild(f);
+  }
+
+  // blocky ECG trace (only straight segments)
+  let d = 'M0 60';
+  for (let x = 0; x < 600; x += 200) {
+    d += ` H${x+40} V50 H${x+56} V60 H${x+76} V72 H${x+84} V10 H${x+94} V90 H${x+102} V60 H${x+130} V42 H${x+156} V60 H${x+200}`;
+  }
+  $('ecgGhost').setAttribute('d', d);
+  $('ecgLive').setAttribute('d', d);
+
+  // ================= 8-bit sound =================
+  let actx = null, muted = false;
+  function tone(freq, dur = .08, type = 'square', vol = .05, when = 0) {
+    if (muted) return;
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      const t = actx.currentTime + when;
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = type; o.frequency.setValueAtTime(freq, t);
+      g.gain.setValueAtTime(vol, t);
+      g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+      o.connect(g); g.connect(actx.destination);
+      o.start(t); o.stop(t + dur + .02);
+    } catch (e) {}
+  }
+  const sfx = {
+    blip:  () => tone(880, .05),
+    start: () => [523, 659, 784].forEach((f, i) => tone(f, .09, 'square', .05, i * .08)),
+    wrong: () => { tone(220, .14, 'sawtooth', .05); tone(150, .26, 'sawtooth', .05, .13); },
+    win:   () => [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tone(f, .12, 'square', .05, i * .1)),
+    type:  () => tone(1100 + Math.random() * 300, .02, 'square', .012)
+  };
+  $('soundBtn').addEventListener('click', () => {
+    muted = !muted;
+    $('soundBtn').textContent = muted ? '♪ OFF' : '♪ ON';
+    if (!muted) sfx.blip();
+  });
+
+  // ================= password =================
+  const envelope = $('envelope'), modal = $('lockModal'), card = $('lockCard');
+  const pw = $('pw'), slots = $('slots'), msg = $('msg'), attemptsEl = $('attempts');
+  const letterView = $('letterView');
+
+  for (let i = 0; i < 10; i++) {
+    const s = document.createElement('span');
+    s.className = 'slot';
+    slots.appendChild(s);
+  }
+
+  let unlocked = false, busy = false, attempts = 0;
+  const nudges = [
+    "WRONG!<br>TRY AGAIN",
+    "NOPE!<br>INSERT PATIENCE",
+    "THINK ABOUT<br>THE HINT...",
+    "GAME OVER?<br>NOT YET!",
+    "CONTINUE?<br>YES ♥"
+  ];
+
+  function render() {
+    const v = pw.value;
+    [...slots.children].forEach((s, i) => {
+      s.textContent = v[i] || '';
+      s.classList.toggle('active', i === v.length && document.activeElement === pw);
+    });
+  }
+
+  function openLock() {
+    if (unlocked) { showLetter(false); return; }
+    sfx.start();
+    modal.classList.add('show');
+    setTimeout(() => pw.focus(), 120);
+    render();
+  }
+
+  function wrong() {
+    busy = true;
+    attempts++;
+    attemptsEl.textContent = 'ATTEMPTS ' + String(attempts).padStart(2, '0');
+    msg.className = 'msg';
+    msg.innerHTML = pw.value.length < 10 ? "NEED<br>10 LETTERS" : nudges[(attempts - 1) % nudges.length];
+    sfx.wrong();
+    card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
+    slots.classList.add('wrong');
+    setTimeout(() => {
+      pw.value = '';
+      slots.classList.remove('wrong');
+      busy = false;
+      render();
+      pw.focus();
+    }, 700);
+  }
+
+  function success() {
+    busy = true;
+    unlocked = true;
+    msg.className = 'msg good';
+    msg.innerHTML = "ACCESS<br>GRANTED!";
+    slots.classList.add('right');
+    pw.blur();
+    sfx.win();
+    setTimeout(() => {
+      modal.classList.remove('show');
+      $('clear').classList.add('show');
+      setTimeout(() => {
+        $('clear').classList.remove('show');
+        envelope.classList.add('open');
+        $('press').innerHTML = '<span class="blink">▶ READ AGAIN ◀</span><small>TAP THE LETTER</small>';
+        setTimeout(() => showLetter(true), 1300);
+      }, 1300);
+    }, 700);
+  }
+
+  function check() {
+    if (busy) return;
+    if (pw.value.toLowerCase() === PASSWORD) success();
+    else wrong();
+  }
+
+  pw.addEventListener('input', () => {
+    if (busy) return;
+    pw.value = pw.value.replace(/[^a-zA-Z]/g, '').slice(0, 10).toLowerCase();
+    msg.innerHTML = '';
+    sfx.blip();
+    render();
+    if (pw.value.length === 10) setTimeout(check, 250);
+  });
+  pw.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); check(); } });
+  pw.addEventListener('focus', render);
+  pw.addEventListener('blur', render);
+  $('unlockBtn').addEventListener('click', check);
+  envelope.addEventListener('click', openLock);
+
+  // ================= letter (typewriter) =================
+  const parts = [...$('letterText').children];
+  const decode = (html) => { const t = document.createElement('textarea'); t.innerHTML = html; return t.value; };
+  parts.forEach(el => {
+    el.dataset.full = el.innerHTML;
+    el.dataset.plain = decode(el.innerHTML.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').trim());
+  });
+
+  let typed = false, typingTimer = null, skipping = false;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function finishTyping() {
+    clearTimeout(typingTimer);
+    parts.forEach(el => { el.innerHTML = el.dataset.full; el.classList.remove('typing'); el.style.visibility = ''; });
+    $('skip').style.display = 'none';
+    typed = true;
+  }
+
+  function typeLetter() {
+    parts.forEach(el => { el.textContent = ''; el.style.visibility = 'hidden'; });
+    $('skip').style.display = '';
+    let pi = 0, ci = 0;
+    function step() {
+      if (skipping) return finishTyping();
+      const el = parts[pi];
+      if (!el) return finishTyping();
+      el.style.visibility = '';
+      el.classList.add('typing');
+      const text = el.dataset.plain;
+      ci++;
+      el.textContent = text.slice(0, ci);
+      if (ci % 2 === 0) sfx.type();
+      if (ci >= text.length) {
+        el.classList.remove('typing');
+        el.innerHTML = el.dataset.full;
+        pi++; ci = 0;
+        typingTimer = setTimeout(step, 350);
+      } else {
+        const ch = text[ci - 1];
+        typingTimer = setTimeout(step, /[.,!?]/.test(ch) ? 180 : 32);
+      }
+    }
+    step();
+  }
+
+  function showLetter(first) {
+    letterView.scrollTop = 0;
+    letterView.classList.add('show');
+    confetti();
+    if (first && !typed && !reduceMotion) { skipping = false; typeLetter(); }
+    else finishTyping();
+  }
+
+  $('dialogBody').addEventListener('click', () => { if (!typed) skipping = true; });
+  $('backBtn').addEventListener('click', () => { finishTyping(); letterView.classList.remove('show'); window.scrollTo(0, 0); });
+
+  // ================= pixel confetti =================
+  function confetti() {
+    const colors = ['#f59ab3', '#e0708f', '#f7bccb', '#ffd86b', '#c9b6f2', '#ffffff'];
+    for (let i = 0; i < 70; i++) {
+      const b = document.createElement('div');
+      b.className = 'bit';
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      if (i % 4 === 0) {
+        b.innerHTML = pixelHeart(color);
+        b.style.width = '20px';
+      } else {
+        const s = [6, 8, 10][Math.floor(Math.random() * 3)];
+        b.style.width = b.style.height = s + 'px';
+        b.style.background = color;
+        b.style.boxShadow = '2px 2px 0 rgba(107,47,74,.3)';
+      }
+      b.style.left = (Math.random() * 100) + 'vw';
+      const dur = 3 + Math.random() * 3;
+      b.style.animationDuration = dur + 's';
+      b.style.animationTimingFunction = `steps(${Math.round(dur * 10)})`;
+      b.style.animationDelay = (Math.random() * 1.5) + 's';
+      document.body.appendChild(b);
+      setTimeout(() => b.remove(), (dur + 1.6) * 1000);
+    }
+  }
+</script>
+</body>
+</html>
